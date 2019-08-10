@@ -7,13 +7,13 @@
 
 import * as THREE from "three";
 
-import Shape from "./Shape";
+import ColorBox from "./ColorBox";
 
 export default class View {
 	private renderer: THREE.WebGLRenderer;
 	private scene: THREE.Scene;
 	private camera: THREE.PerspectiveCamera;
-	private torus: Shape;
+	private rgbBox: ColorBox;
 
 	constructor(canvasElem: HTMLCanvasElement) {
 		this.renderer = new THREE.WebGLRenderer({
@@ -24,7 +24,7 @@ export default class View {
 		this.camera.position.z = 15;
 		this.scene = new THREE.Scene();
 		this.scene.background = new THREE.TextureLoader().load("./textures/bgnd.png");
-		this.torus = new Shape(this.scene);
+		this.rgbBox = new ColorBox(this.scene);
 
 		// Set initial sizes
 		this.onWindowResize(window.innerWidth, window.innerHeight);
@@ -37,7 +37,7 @@ export default class View {
 	}
 
 	public update(secs: number): void {
-		this.torus.update(secs);
+		this.rgbBox.update(secs);
 		this.renderer.render(this.scene, this.camera);
 	}
 }
