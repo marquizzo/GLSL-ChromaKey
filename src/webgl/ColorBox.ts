@@ -18,7 +18,8 @@ interface CustomAttribs {
 
 export default class ColorBox {
 	mesh: THREE.Mesh;
-	timeU: THREE.IUniform;
+	hsbMix: THREE.IUniform;
+	rot: THREE.Euler;
 
 	constructor(parentScene: THREE.Scene) {
 		const boxGeom = new THREE.BoxBufferGeometry(0.5, 0.5, 0.5);
@@ -28,19 +29,21 @@ export default class ColorBox {
 		grid.attributes.position = boxGeom.getAttribute("position");
 		grid.attributes.normal = boxGeom.getAttribute("normal");
 		grid.attributes.uv = boxGeom.getAttribute("uv");
-		const custom = this.makeOffsetGrid(8);
+		const custom = this.makeOffsetGrid(16);
 		grid.addAttribute("offset", new THREE.InstancedBufferAttribute(custom.offset, 3));
 		grid.addAttribute("color", new THREE.InstancedBufferAttribute(custom.color, 3));
 
 		const mat = new THREE.RawShaderMaterial({
 			uniforms: {
-				time: {value: 0}
+				hsbMix: {value: 0}
 			},
 			vertexShader: vertShader,
 			fragmentShader: fragShader,
 		});
-		this.timeU = mat.uniforms.time;
+		this.hsbMix = mat.uniforms.hsbMix;
 		this.mesh = new THREE.Mesh(grid, mat);
+		this.rot = this.mesh.rotation;
+
 		parentScene.add(this.mesh);
 	}
 
@@ -79,12 +82,17 @@ export default class ColorBox {
 		return {offset: arrayOffsets, color: arrayColors};
 	}
 
+	public rotate(xRad: number, yRad: number): void {
+		this.rot.x += yRad * Math.PI;
+		this.rot.y += xRad * Math.PI;
+		this.rot.x = THREE.Math.clamp(this.rot.x, -Math.PI / 2, Math.PI / 2);
+	}
+
 	public update(secs: number): void {
-		this.timeU.value = secs;
-		this.mesh.rotation.set(
-			Math.sin(secs / 10) * 2 * Math.PI,
-			Math.cos(secs / 10) * 2 * Math.PI,
-			0
-		);
+		// this.mesh.rotation.set(
+		// 	0,
+		// 	Math.cos(secs / 10) * 2 * Math.PI,
+		// 	0
+		// );
 	}
 }
