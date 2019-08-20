@@ -17,11 +17,17 @@ interface CustomAttribs {
 }
 
 export default class ColorBox {
-	mesh: THREE.Mesh;
-	hsbMix: THREE.IUniform;
-	rot: THREE.Euler;
+	static SEGMENTS: number = 20;
 
-	constructor(parentScene: THREE.Scene) {
+	private rot: THREE.Euler;
+	private isHSB: boolean;
+
+	public mesh: THREE.Mesh;
+	public group: THREE.Group;
+	public hsbMix: THREE.IUniform;
+
+	constructor(parentScene: THREE.Scene, hsbType: boolean) {
+		this.isHSB = hsbType;
 		const boxGeom = new THREE.BoxBufferGeometry(0.5, 0.5, 0.5);
 		const grid = new THREE.InstancedBufferGeometry();
 
@@ -29,7 +35,7 @@ export default class ColorBox {
 		grid.attributes.position = boxGeom.getAttribute("position");
 		grid.attributes.normal = boxGeom.getAttribute("normal");
 		grid.attributes.uv = boxGeom.getAttribute("uv");
-		const custom = this.makeOffsetGrid(16);
+		const custom = this.makeOffsetGrid(ColorBox.SEGMENTS);
 		grid.addAttribute("offset", new THREE.InstancedBufferAttribute(custom.offset, 3));
 		grid.addAttribute("color", new THREE.InstancedBufferAttribute(custom.color, 3));
 
@@ -42,9 +48,14 @@ export default class ColorBox {
 		});
 		this.hsbMix = mat.uniforms.hsbMix;
 		this.mesh = new THREE.Mesh(grid, mat);
-		this.rot = this.mesh.rotation;
+		this.group = new THREE.Group();
+		this.group.add(this.mesh);
+		this.group.add(this.makeAxes());
 
-		parentScene.add(this.mesh);
+		this.rot = this.group.rotation;
+		this.rot.set(-Math.PI / 4, -Math.PI * 5 / 4, 0);
+
+		parentScene.add(this.group);
 	}
 
 	private makeOffsetGrid(length: number): CustomAttribs {
@@ -82,17 +93,27 @@ export default class ColorBox {
 		return {offset: arrayOffsets, color: arrayColors};
 	}
 
+	private makeAxes() {
+		const padding = 1;
+		const l2 = -ColorBox.SEGMENTS / 2 - padding;
+
+		const geom = new THREE.BufferGeometry();
+		const arrayPos = new Float32Array([
+			l2, l2, l2,
+			-l2, l2, l2,
+			l2, l2, l2,
+			l2, -l2, l2,
+			l2, l2, l2,
+			l2, l2, -l2
+		]);
+		geom.addAttribute("position", new THREE.BufferAttribute(arrayPos, 3));
+		const material = new THREE.LineBasicMaterial( { color: 0xffffff } );
+		return new THREE.LineSegments(geom, material);
+	}
+
 	public rotate(xRad: number, yRad: number): void {
 		this.rot.x += yRad * Math.PI;
 		this.rot.y += xRad * Math.PI;
 		this.rot.x = THREE.Math.clamp(this.rot.x, -Math.PI / 2, Math.PI / 2);
-	}
-
-	public update(secs: number): void {
-		// this.mesh.rotation.set(
-		// 	0,
-		// 	Math.cos(secs / 10) * 2 * Math.PI,
-		// 	0
-		// );
 	}
 }

@@ -13,7 +13,7 @@ vec3 hsb2rgb( in vec3 c ){
 
 void main() {
 	vec3 rgb = vColor;
-	vec3 hsb = hsb2rgb(rgb);
+	vec3 hsb = hsb2rgb(vec3(rgb.r, rgb.g, 1.0 - rgb.b));
 	vec3 texel = mix(rgb, hsb, hsbMix);
 	gl_FragColor = vec4(texel, 1.0);
 }
